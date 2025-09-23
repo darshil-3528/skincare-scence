@@ -13,7 +13,7 @@
     Lazy load images, responsive on all devices
 
 {% enddoc %} {% endcomment %}
-{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+{% comment %} {% assign ai_gen_id = block.id | replace: '_', '' | downcase %} {% endcomment %}
 
 {% style %}
   .ai-slideshow-{{ ai_gen_id }} {
