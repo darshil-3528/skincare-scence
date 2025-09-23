@@ -1,5 +1,93 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
+    "1758641034f5e9f5f2": {
+      "type": "_blocks",
+      "blocks": {
+        "ai_gen_block_47bff8e_TJ3yga": {
+          "type": "ai_gen_block_47bff8e",
+          "settings": {
+            "slide_height_desktop": 350,
+            "slide_height_mobile": 350,
+            "background_color": "#000000",
+            "autoplay": true,
+            "autoplay_speed": 5,
+            "show_arrows": true,
+            "show_dots": true,
+            "text_color": "#ffffff",
+            "title_size": 36,
+            "subtitle_size": 18,
+            "button_color": "#ffffff",
+            "button_text_color": "#000000",
+            "button_hover_color": "#f0f0f0",
+            "button_radius": 4,
+            "slide_1_enabled": true,
+            "slide_1_title": "",
+            "slide_1_subtitle": "",
+            "slide_1_button_text": "",
+            "slide_1_button_link": "",
+            "slide_2_enabled": true,
+            "slide_2_title": "",
+            "slide_2_subtitle": "",
+            "slide_2_button_text": "",
+            "slide_2_button_link": "",
+            "slide_3_enabled": false,
+            "slide_3_title": "",
+            "slide_3_subtitle": "",
+            "slide_3_button_text": "",
+            "slide_3_button_link": "",
+            "slide_4_enabled": false,
+            "slide_4_title": "",
+            "slide_4_subtitle": "",
+            "slide_4_button_text": "",
+            "slide_4_button_link": "",
+            "slide_5_enabled": false,
+            "slide_5_title": "",
+            "slide_5_subtitle": "",
+            "slide_5_button_text": "",
+            "slide_5_button_link": "",
+            "slide_6_enabled": false,
+            "slide_6_title": "",
+            "slide_6_subtitle": "",
+            "slide_6_button_text": "",
+            "slide_6_button_link": "",
+            "slide_7_enabled": false,
+            "slide_7_title": "",
+            "slide_7_subtitle": "",
+            "slide_7_button_text": "",
+            "slide_7_button_link": "",
+            "slide_8_enabled": false,
+            "slide_8_title": "",
+            "slide_8_subtitle": "",
+            "slide_8_button_text": "",
+            "slide_8_button_link": "",
+            "slide_9_enabled": false,
+            "slide_9_title": "",
+            "slide_9_subtitle": "",
+            "slide_9_button_text": "",
+            "slide_9_button_link": "",
+            "slide_10_enabled": false,
+            "slide_10_title": "",
+            "slide_10_subtitle": "",
+            "slide_10_button_text": "",
+            "slide_10_button_link": ""
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "ai_gen_block_47bff8e_TJ3yga"
+      ],
+      "settings": {}
+    },
     "image-with-text": {
       "type": "image-with-text",
       "blocks": {
@@ -27,13 +115,13 @@
         "height": "large",
         "desktop_image_width": "large",
         "layout": "text_first",
+        "image_behavior": "none",
+        "content_layout": "overlap",
         "desktop_content_position": "middle",
         "desktop_content_alignment": "left",
-        "content_layout": "overlap",
+        "mobile_content_alignment": "left",
         "section_color_scheme": "scheme-1",
         "color_scheme": "scheme-2",
-        "image_behavior": "none",
-        "mobile_content_alignment": "left",
         "padding_top": 0,
         "padding_bottom": 0
       }
@@ -41,18 +129,18 @@
     "featured-collection": {
       "type": "featured-collection",
       "settings": {
+        "collection": "all",
+        "products_to_show": 4,
         "title": "Featured products",
         "heading_size": "h2",
         "description": "",
         "show_description": false,
         "description_style": "body",
-        "collection": "all",
-        "products_to_show": 4,
         "columns_desktop": 4,
+        "enable_desktop_slider": false,
         "full_width": false,
         "show_view_all": false,
         "view_all_style": "solid",
-        "enable_desktop_slider": false,
         "color_scheme": "scheme-1",
         "image_ratio": "square",
         "image_shape": "default",
@@ -68,6 +156,7 @@
     }
   },
   "order": [
+    "1758641034f5e9f5f2",
     "image-with-text",
     "featured-collection"
   ]
