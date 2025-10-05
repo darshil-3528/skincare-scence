@@ -1,6 +1,1045 @@
+{% doc %}
+  @prompt
+    Create a Shopify 2.0 section named "bestseller-products" using Liquid, JSON, and Tailwind CSS.
+    
+    🎯 Goal:
+    Build a modern “Bestsellers” product section like Pilgrim’s site — clean, dynamic, editable, and powered by Shopify’s dynamic product data.
+    
+    ✨ Features:
+    
+    1. Section Header:
+       - Editable title (default: “Bestsellers”)
+       - Editable subtitle (default: “Unmissable Favourites You’ll Adore”)
+       - “See All” button (editable text + URL)
+       - Collection filter tabs (editable titles and linked to collections dynamically)
+         → When a tab is clicked, products from that selected collection display instantly.
+    
+    2. Product Cards (Dynamic):
+       - Product image
+       - Discount badge (auto-calculated from compare_at_price)
+       - Dynamic review rating (not static):
+         → Pull rating and review count dynamically using metafields or app integrations.
+         → Example metafields: 
+           - `product.metafields.reviews.rating.value`
+           - `product.metafields.reviews.count`
+         → If no data found, hide rating area.
+       - Product title and short description (from product object)
+       - Dynamic price (current and compare_at_price)
+       - “Add to Cart” button (fully dynamic)
+       - Optional text tag like “#1 in Skincare” or “SELLING FAST” (editable via metafield or custom text field)
+    
+    3. Add-to-Cart Dynamic Behavior (Configurable in Customizer):
+       Add a dropdown setting called “Cart Action Type” with these options:
+       - 🛒 “Redirect to Cart Page” → redirects user to `/cart`
+       - 🧭 “Open Drawer” → triggers Shopify cart drawer (standard event)
+       - 🔔 “Show Notification Only” → adds via AJAX and shows a success toast (“✅ Product added to cart”)
+       → Use AJAX `fetch('/cart/add.js')` for Notification option.
+    
+    4. Responsive Design:
+       - Carousel or grid layout (4 products per row on desktop, 2 on tablet, 1 on mobile)
+       - Smooth animations using Tailwind transition utilities
+    
+    5. Shopify Schema (Customizer Settings):
+       - Section title
+       - Subtitle
+       - “See All” link URL
+       - Collection picker for
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-bestsellers-section-{{ ai_gen_id }} {
+    padding: {{ block.settings.section_padding_top }}px 0 {{ block.settings.section_padding_bottom }}px;
+    background-color: {{ block.settings.background_color }};
+  }
+
+  .ai-bestsellers-container-{{ ai_gen_id }} {
+    max-width: {{ settings.page_width }}px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .ai-bestsellers-header-{{ ai_gen_id }} {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .ai-bestsellers-title-{{ ai_gen_id }} {
+    font-family: {{ settings.type_header_font.family }}, {{ settings.type_header_font.fallback_families }};
+    font-weight: {{ settings.type_header_font.weight }};
+    font-size: {{ block.settings.title_size }}px;
+    color: {{ block.settings.title_color }};
+    margin: 0 0 12px;
+    line-height: 1.2;
+  }
+
+  .ai-bestsellers-subtitle-{{ ai_gen_id }} {
+    font-family: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+    font-size: {{ block.settings.subtitle_size }}px;
+    color: {{ block.settings.subtitle_color }};
+    margin: 0 0 24px;
+    line-height: 1.4;
+  }
+
+  .ai-bestsellers-see-all-{{ ai_gen_id }} {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background-color: {{ block.settings.see_all_bg_color }};
+    color: {{ block.settings.see_all_text_color }};
+    text-decoration: none;
+    border-radius: {{ settings.buttons_radius }}px;
+    font-family: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: {{ settings.buttons_border_thickness }}px solid rgba({{ block.settings.see_all_text_color | color_extract: 'red' }}, {{ block.settings.see_all_text_color | color_extract: 'green' }}, {{ block.settings.see_all_text_color | color_extract: 'blue' }}, {{ settings.buttons_border_opacity | divided_by: 100.0 }});
+  }
+
+  .ai-bestsellers-see-all-{{ ai_gen_id }}:hover {
+    background-color: {{ block.settings.see_all_hover_bg_color }};
+    color: {{ block.settings.see_all_hover_text_color }};
+    transform: translateY(-2px);
+  }
+
+  .ai-bestsellers-tabs-{{ ai_gen_id }} {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .ai-bestsellers-tab-{{ ai_gen_id }} {
+    padding: 12px 24px;
+    background-color: transparent;
+    color: {{ block.settings.tab_text_color }};
+    border: 2px solid {{ block.settings.tab_border_color }};
+    border-radius: {{ settings.buttons_radius }}px;
+    cursor: pointer;
+    font-family: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .ai-bestsellers-tab-{{ ai_gen_id }}:hover,
+  .ai-bestsellers-tab-{{ ai_gen_id }}.active {
+    background-color: {{ block.settings.tab_active_bg_color }};
+    color: {{ block.settings.tab_active_text_color }};
+    border-color: {{ block.settings.tab_active_bg_color }};
+  }
+
+  .ai-bestsellers-products-grid-{{ ai_gen_id }} {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: {{ settings.spacing_grid_horizontal }}px;
+    margin-bottom: 40px;
+  }
+
+  .ai-bestsellers-product-card-{{ ai_gen_id }} {
+    background-color: {{ block.settings.card_bg_color }};
+    border-radius: {{ settings.card_corner_radius }}px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 0 {{ settings.card_shadow_vertical_offset }}px {{ settings.card_shadow_blur }}px rgba({{ settings.card_color_scheme | color_extract: 'red' }}, {{ settings.card_color_scheme | color_extract: 'green' }}, {{ settings.card_color_scheme | color_extract: 'blue' }}, {{ settings.card_shadow_opacity | divided_by: 100.0 }});
+  }
+
+  .ai-bestsellers-product-card-{{ ai_gen_id }}:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 {{ settings.card_shadow_vertical_offset | plus: 8 }}px {{ settings.card_shadow_blur | plus: 10 }}px rgba({{ settings.card_color_scheme | color_extract: 'red' }}, {{ settings.card_color_scheme | color_extract: 'green' }}, {{ settings.card_color_scheme | color_extract: 'blue' }}, {{ settings.card_shadow_opacity | divided_by: 100.0 | times: 1.5 }});
+  }
+
+  .ai-bestsellers-product-image-wrapper-{{ ai_gen_id }} {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+
+  .ai-bestsellers-product-image-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .ai-bestsellers-product-card-{{ ai_gen_id }}:hover .ai-bestsellers-product-image-{{ ai_gen_id }} {
+    transform: scale(1.05);
+  }
+
+  .ai-bestsellers-discount-badge-{{ ai_gen_id }} {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background-color: {{ block.settings.badge_bg_color }};
+    color: {{ block.settings.badge_text_color }};
+    padding: 6px 12px;
+    border-radius: {{ settings.badge_corner_radius }}px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 2;
+  }
+
+  .ai-bestsellers-product-tag-{{ ai_gen_id }} {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background-color: {{ block.settings.tag_bg_color }};
+    color: {{ block.settings.tag_text_color }};
+    padding: 6px 12px;
+    border-radius: {{ settings.badge_corner_radius }}px;
+    font-size: 11px;
+    font-weight: 600;
+    z-index: 2;
+  }
+
+  .ai-bestsellers-product-info-{{ ai_gen_id }} {
+    padding: 20px;
+    text-align: {{ settings.card_text_alignment }};
+  }
+
+  .ai-bestsellers-product-rating-{{ ai_gen_id }} {
+    display: flex;
+    align-items: center;
+    justify-content: {{ settings.card_text_alignment }};
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .ai-bestsellers-stars-{{ ai_gen_id }} {
+    display: flex;
+    gap: 2px;
+  }
+
+  .ai-bestsellers-star-{{ ai_gen_id }} {
+    width: 14px;
+    height: 14px;
+    fill: {{ block.settings.star_color }};
+  }
+
+  .ai-bestsellers-star-empty-{{ ai_gen_id }} {
+    fill: {{ block.settings.star_empty_color }};
+  }
+
+  .ai-bestsellers-review-count-{{ ai_gen_id }} {
+    font-size: 12px;
+    color: {{ block.settings.review_count_color }};
+  }
+
+  .ai-bestsellers-product-title-{{ ai_gen_id }} {
+    font-family: {{ settings.type_header_font.family }}, {{ settings.type_header_font.fallback_families }};
+    font-size: 16px;
+    font-weight: 600;
+    color: {{ block.settings.product_title_color }};
+    margin: 0 0 8px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ai-bestsellers-product-description-{{ ai_gen_id }} {
+    font-size: 14px;
+    color: {{ block.settings.product_description_color }};
+    margin: 0 0 12px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ai-bestsellers-product-price-{{ ai_gen_id }} {
+    margin-bottom: 16px;
+  }
+
+  .ai-bestsellers-price-current-{{ ai_gen_id }} {
+    font-size: 18px;
+    font-weight: 600;
+    color: {{ block.settings.price_color }};
+  }
+
+  .ai-bestsellers-price-compare-{{ ai_gen_id }} {
+    font-size: 14px;
+    color: {{ block.settings.compare_price_color }};
+    text-decoration: line-through;
+    margin-left: 8px;
+  }
+
+  .ai-bestsellers-add-to-cart-{{ ai_gen_id }} {
+    width: 100%;
+    padding: 12px 20px;
+    background-color: {{ block.settings.button_bg_color }};
+    color: {{ block.settings.button_text_color }};
+    border: none;
+    border-radius: {{ settings.buttons_radius }}px;
+    font-family: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .ai-bestsellers-add-to-cart-{{ ai_gen_id }}:hover {
+    background-color: {{ block.settings.button_hover_bg_color }};
+    color: {{ block.settings.button_hover_text_color }};
+    transform: translateY(-1px);
+  }
+
+  .ai-bestsellers-notification-{{ ai_gen_id }} {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #10b981;
+    color: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    transform: translateX(400px);
+    transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ai-bestsellers-notification-{{ ai_gen_id }}.show {
+    transform: translateX(0);
+  }
+
+  @media screen and (max-width: 990px) {
+    .ai-bestsellers-products-grid-{{ ai_gen_id }} {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-bestsellers-products-grid-{{ ai_gen_id }} {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .ai-bestsellers-tabs-{{ ai_gen_id }} {
+      gap: 8px;
+    }
+
+    .ai-bestsellers-tab-{{ ai_gen_id }} {
+      padding: 10px 16px;
+      font-size: 14px;
+    }
+
+    .ai-bestsellers-product-info-{{ ai_gen_id }} {
+      padding: 16px;
+    }
+
+    .ai-bestsellers-title-{{ ai_gen_id }} {
+      font-size: {{ block.settings.title_size | times: 0.8 }}px;
+    }
+
+    .ai-bestsellers-subtitle-{{ ai_gen_id }} {
+      font-size: {{ block.settings.subtitle_size | times: 0.9 }}px;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .ai-bestsellers-products-grid-{{ ai_gen_id }} {
+      grid-template-columns: 1fr;
+    }
+  }
+{% endstyle %}
+
+<bestsellers-section-{{ ai_gen_id }}
+  class="ai-bestsellers-section-{{ ai_gen_id }}"
+  data-cart-action="{{ block.settings.cart_action }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="ai-bestsellers-container-{{ ai_gen_id }}">
+    <div class="ai-bestsellers-header-{{ ai_gen_id }}">
+      {% if block.settings.title != blank %}
+        <h2 class="ai-bestsellers-title-{{ ai_gen_id }}">{{ block.settings.title }}</h2>
+      {% endif %}
+      
+      {% if block.settings.subtitle != blank %}
+        <p class="ai-bestsellers-subtitle-{{ ai_gen_id }}">{{ block.settings.subtitle }}</p>
+      {% endif %}
+      
+      {% if block.settings.see_all_url != blank and block.settings.see_all_text != blank %}
+        <a href="{{ block.settings.see_all_url }}" class="ai-bestsellers-see-all-{{ ai_gen_id }}">
+          {{ block.settings.see_all_text }}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+      {% endif %}
+    </div>
+
+    {% if block.settings.show_collection_tabs %}
+      <div class="ai-bestsellers-tabs-{{ ai_gen_id }}">
+        {% for i in (1..4) %}
+          {% liquid
+            assign collection_key = 'collection_' | append: i
+            assign tab_title_key = 'tab_title_' | append: i
+            assign collection = block.settings[collection_key]
+            assign tab_title = block.settings[tab_title_key]
+          %}
+          
+          {% if collection != blank and tab_title != blank %}
+            <button 
+              class="ai-bestsellers-tab-{{ ai_gen_id }} {% if forloop.first %}active{% endif %}"
+              data-collection-handle="{{ collection.handle }}"
+              data-tab-index="{{ forloop.index }}"
+            >
+              {{ tab_title }}
+            </button>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="ai-bestsellers-products-grid-{{ ai_gen_id }}" id="ai-bestsellers-products-{{ ai_gen_id }}">
+      {% liquid
+        if block.settings.show_collection_tabs and block.settings.collection_1 != blank
+          assign default_collection = block.settings.collection_1
+        else
+          assign default_collection = block.settings.default_collection
+        endif
+      %}
+      
+      {% if default_collection != blank %}
+        {% for product in default_collection.products limit: block.settings.products_to_show %}
+          {% render 'ai-bestsellers-product-card', product: product, block: block, ai_gen_id: ai_gen_id %}
+        {% endfor %}
+      {% else %}
+        {% for i in (1..block.settings.products_to_show) %}
+          <div class="ai-bestsellers-product-card-{{ ai_gen_id }}">
+            <div class="ai-bestsellers-product-image-wrapper-{{ ai_gen_id }}">
+              {{ 'product-1' | placeholder_svg_tag: 'ai-bestsellers-product-image-' | append: ai_gen_id }}
+            </div>
+            <div class="ai-bestsellers-product-info-{{ ai_gen_id }}">
+              <h3 class="ai-bestsellers-product-title-{{ ai_gen_id }}">Sample Product {{ i }}</h3>
+              <p class="ai-bestsellers-product-description-{{ ai_gen_id }}">Add products by selecting a collection</p>
+              <div class="ai-bestsellers-product-price-{{ ai_gen_id }}">
+                <span class="ai-bestsellers-price-current-{{ ai_gen_id }}">₹999</span>
+              </div>
+              <button class="ai-bestsellers-add-to-cart-{{ ai_gen_id }}" disabled>
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="ai-bestsellers-notification-{{ ai_gen_id }}" id="ai-bestsellers-notification-{{ ai_gen_id }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M20 6L9 17l-5-5"/>
+    </svg>
+    <span>Product added to cart!</span>
+  </div>
+</bestsellers-section-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class BestsellersSection{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.cartAction = this.dataset.cartAction;
+        this.currentCollection = null;
+        this.isLoading = false;
+      }
+
+      connectedCallback() {
+        this.setupEventListeners();
+        this.initializeFirstTab();
+      }
+
+      setupEventListeners() {
+        const tabs = this.querySelectorAll('.ai-bestsellers-tab-{{ ai_gen_id }}');
+        tabs.forEach(tab => {
+          tab.addEventListener('click', (e) => this.handleTabClick(e));
+        });
+
+        const addToCartButtons = this.querySelectorAll('.ai-bestsellers-add-to-cart-{{ ai_gen_id }}');
+        addToCartButtons.forEach(button => {
+          button.addEventListener('click', (e) => this.handleAddToCart(e));
+        });
+      }
+
+      initializeFirstTab() {
+        const firstTab = this.querySelector('.ai-bestsellers-tab-{{ ai_gen_id }}.active');
+        if (firstTab) {
+          this.currentCollection = firstTab.dataset.collectionHandle;
+        }
+      }
+
+      async handleTabClick(e) {
+        e.preventDefault();
+        
+        if (this.isLoading) return;
+        
+        const clickedTab = e.target;
+        const collectionHandle = clickedTab.dataset.collectionHandle;
+        
+        if (this.currentCollection === collectionHandle) return;
+        
+        this.updateActiveTab(clickedTab);
+        await this.loadCollectionProducts(collectionHandle);
+      }
+
+      updateActiveTab(activeTab) {
+        const tabs = this.querySelectorAll('.ai-bestsellers-tab-{{ ai_gen_id }}');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        activeTab.classList.add('active');
+      }
+
+      async loadCollectionProducts(collectionHandle) {
+        this.isLoading = true;
+        const productsGrid = this.querySelector('#ai-bestsellers-products-{{ ai_gen_id }}');
+        
+        try {
+          const response = await fetch(`/collections/${collectionHandle}/products.json?limit={{ block.settings.products_to_show }}`);
+          const data = await response.json();
+          
+          productsGrid.innerHTML = '';
+          
+          data.products.forEach(product => {
+            const productCard = this.createProductCard(product);
+            productsGrid.appendChild(productCard);
+          });
+          
+          this.setupAddToCartListeners();
+          this.currentCollection = collectionHandle;
+          
+        } catch (error) {
+          console.error('Error loading products:', error);
+        } finally {
+          this.isLoading = false;
+        }
+      }
+
+      createProductCard(product) {
+        const card = document.createElement('div');
+        card.className = 'ai-bestsellers-product-card-{{ ai_gen_id }}';
+        
+        const discountPercentage = product.compare_at_price_min && product.price_min < product.compare_at_price_min 
+          ? Math.round(((product.compare_at_price_min - product.price_min) / product.compare_at_price_min) * 100)
+          : 0;
+
+        const rating = product.metafields?.reviews?.rating?.value || 0;
+        const reviewCount = product.metafields?.reviews?.count || 0;
+        const customTag = product.metafields?.custom?.tag?.value || '';
+
+        card.innerHTML = `
+          <div class="ai-bestsellers-product-image-wrapper-{{ ai_gen_id }}">
+            <img 
+              src="${product.featured_image ? product.featured_image : '/assets/no-image.svg'}" 
+              alt="${product.title}"
+              class="ai-bestsellers-product-image-{{ ai_gen_id }}"
+              loading="lazy"
+            >
+            ${discountPercentage > 0 ? `<div class="ai-bestsellers-discount-badge-{{ ai_gen_id }}">${discountPercentage}% OFF</div>` : ''}
+            ${customTag ? `<div class="ai-bestsellers-product-tag-{{ ai_gen_id }}">${customTag}</div>` : ''}
+          </div>
+          <div class="ai-bestsellers-product-info-{{ ai_gen_id }}">
+            ${rating > 0 ? this.createRatingHTML(rating, reviewCount) : ''}
+            <h3 class="ai-bestsellers-product-title-{{ ai_gen_id }}">${product.title}</h3>
+            <p class="ai-bestsellers-product-description-{{ ai_gen_id }}">${this.truncateText(product.body_html?.replace(/<[^>]*>/g, '') || '', 60)}</p>
+            <div class="ai-bestsellers-product-price-{{ ai_gen_id }}">
+              <span class="ai-bestsellers-price-current-{{ ai_gen_id }}">₹${(product.price_min / 100).toFixed(2)}</span>
+              ${product.compare_at_price_min && product.compare_at_price_min > product.price_min ? 
+                `<span class="ai-bestsellers-price-compare-{{ ai_gen_id }}">₹${(product.compare_at_price_min / 100).toFixed(2)}</span>` : ''}
+            </div>
+            <button 
+              class="ai-bestsellers-add-to-cart-{{ ai_gen_id }}"
+              data-product-id="${product.id}"
+              data-variant-id="${product.variants[0]?.id}"
+              ${!product.available ? 'disabled' : ''}
+            >
+              ${product.available ? 'Add to Cart' : 'Sold Out'}
+            </button>
+          </div>
+        `;
+        
+        return card;
+      }
+
+      createRatingHTML(rating, reviewCount) {
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 !== 0;
+        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+        
+        let starsHTML = '<div class="ai-bestsellers-stars-{{ ai_gen_id }}">';
+        
+        for (let i = 0; i < fullStars; i++) {
+          starsHTML += `<svg class="ai-bestsellers-star-{{ ai_gen_id }}" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+        }
+        
+        if (hasHalfStar) {
+          starsHTML += `<svg class="ai-bestsellers-star-{{ ai_gen_id }}" viewBox="0 0 24 24"><defs><linearGradient id="half-{{ ai_gen_id }}"><stop offset="50%" stop-color="currentColor"/><stop offset="50%" stop-color="#e5e7eb"/></linearGradient></defs><path fill="url(#half-{{ ai_gen_id }})" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+        }
+        
+        for (let i = 0; i < emptyStars; i++) {
+          starsHTML += `<svg class="ai-bestsellers-star-{{ ai_gen_id }} ai-bestsellers-star-empty-{{ ai_gen_id }}" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+        }
+        
+        starsHTML += '</div>';
+        
+        return `
+          <div class="ai-bestsellers-product-rating-{{ ai_gen_id }}">
+            ${starsHTML}
+            ${reviewCount > 0 ? `<span class="ai-bestsellers-review-count-{{ ai_gen_id }}">(${reviewCount})</span>` : ''}
+          </div>
+        `;
+      }
+
+      truncateText(text, maxLength) {
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength).trim() + '...';
+      }
+
+      setupAddToCartListeners() {
+        const buttons = this.querySelectorAll('.ai-bestsellers-add-to-cart-{{ ai_gen_id }}');
+        buttons.forEach(button => {
+          button.addEventListener('click', (e) => this.handleAddToCart(e));
+        });
+      }
+
+      async handleAddToCart(e) {
+        e.preventDefault();
+        
+        const button = e.target;
+        const variantId = button.dataset.variantId;
+        
+        if (!variantId || button.disabled) return;
+        
+        const originalText = button.textContent;
+        button.textContent = 'Adding...';
+        button.disabled = true;
+        
+        try {
+          const formData = new FormData();
+          formData.append('id', variantId);
+          formData.append('quantity', 1);
+          
+          const response = await fetch('/cart/add.js', {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (response.ok) {
+            switch (this.cartAction) {
+              case 'redirect':
+                window.location.href = '/cart';
+                break;
+              case 'drawer':
+                document.dispatchEvent(new CustomEvent('cart:open'));
+                break;
+              case 'notification':
+              default:
+                this.showNotification();
+                break;
+            }
+          } else {
+            throw new Error('Failed to add to cart');
+          }
+          
+        } catch (error) {
+          console.error('Error adding to cart:', error);
+          alert('Error adding product to cart. Please try again.');
+        } finally {
+          button.textContent = originalText;
+          button.disabled = false;
+        }
+      }
+
+      showNotification() {
+        const notification = this.querySelector('#ai-bestsellers-notification-{{ ai_gen_id }}');
+        notification.classList.add('show');
+        
+        setTimeout(() => {
+          notification.classList.remove('show');
+        }, 3000);
+      }
+    }
+
+    customElements.define('bestsellers-section-{{ ai_gen_id }}', BestsellersSection{{ ai_gen_id }});
+  })();
+</script>
+
 {% schema %}
- {
-   "name": "AI_Block",
-   "tag": "shopify-ai-generated-block"
- }
+{
+  "name": "Bestseller products",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section content"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Bestsellers"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "Unmissable Favourites You'll Adore"
+    },
+    {
+      "type": "text",
+      "id": "see_all_text",
+      "label": "See all button text",
+      "default": "See All"
+    },
+    {
+      "type": "url",
+      "id": "see_all_url",
+      "label": "See all button link"
+    },
+    {
+      "type": "header",
+      "content": "Products"
+    },
+    {
+      "type": "collection",
+      "id": "default_collection",
+      "label": "Default collection"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "min": 4,
+      "max": 12,
+      "step": 1,
+      "label": "Products to show",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Collection tabs"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_tabs",
+      "label": "Show collection filter tabs",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "tab_title_1",
+      "label": "Tab 1 title",
+      "default": "All"
+    },
+    {
+      "type": "collection",
+      "id": "collection_1",
+      "label": "Tab 1 collection"
+    },
+    {
+      "type": "text",
+      "id": "tab_title_2",
+      "label": "Tab 2 title",
+      "default": "Skincare"
+    },
+    {
+      "type": "collection",
+      "id": "collection_2",
+      "label": "Tab 2 collection"
+    },
+    {
+      "type": "text",
+      "id": "tab_title_3",
+      "label": "Tab 3 title",
+      "default": "Makeup"
+    },
+    {
+      "type": "collection",
+      "id": "collection_3",
+      "label": "Tab 3 collection"
+    },
+    {
+      "type": "text",
+      "id": "tab_title_4",
+      "label": "Tab 4 title",
+      "default": "Fragrance"
+    },
+    {
+      "type": "collection",
+      "id": "collection_4",
+      "label": "Tab 4 collection"
+    },
+    {
+      "type": "header",
+      "content": "Cart behavior"
+    },
+    {
+      "type": "select",
+      "id": "cart_action",
+      "label": "Cart action type",
+      "options": [
+        {
+          "value": "notification",
+          "label": "Show notification only"
+        },
+        {
+          "value": "drawer",
+          "label": "Open cart drawer"
+        },
+        {
+          "value": "redirect",
+          "label": "Redirect to cart page"
+        }
+      ],
+      "default": "notification"
+    },
+    {
+      "type": "header",
+      "content": "Section style"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#fdfbf7"
+    },
+    {
+      "type": "range",
+      "id": "section_padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "section_padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 60
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "min": 20,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "label": "Title size",
+      "default": 36
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#2e2a39"
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Subtitle size",
+      "default": 16
+    },
+    {
+      "type": "color",
+      "id": "subtitle_color",
+      "label": "Subtitle color",
+      "default": "#666666"
+    },
+    {
+      "type": "header",
+      "content": "See all button"
+    },
+    {
+      "type": "color",
+      "id": "see_all_bg_color",
+      "label": "Background color",
+      "default": "#9b046f"
+    },
+    {
+      "type": "color",
+      "id": "see_all_text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "see_all_hover_bg_color",
+      "label": "Hover background color",
+      "default": "#7a0356"
+    },
+    {
+      "type": "color",
+      "id": "see_all_hover_text_color",
+      "label": "Hover text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Collection tabs"
+    },
+    {
+      "type": "color",
+      "id": "tab_text_color",
+      "label": "Tab text color",
+      "default": "#2e2a39"
+    },
+    {
+      "type": "color",
+      "id": "tab_border_color",
+      "label": "Tab border color",
+      "default": "#e5e5e5"
+    },
+    {
+      "type": "color",
+      "id": "tab_active_bg_color",
+      "label": "Active tab background",
+      "default": "#9b046f"
+    },
+    {
+      "type": "color",
+      "id": "tab_active_text_color",
+      "label": "Active tab text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Product cards"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_color",
+      "label": "Card background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "product_title_color",
+      "label": "Product title color",
+      "default": "#2e2a39"
+    },
+    {
+      "type": "color",
+      "id": "product_description_color",
+      "label": "Description color",
+      "default": "#666666"
+    },
+    {
+      "type": "color",
+      "id": "price_color",
+      "label": "Price color",
+      "default": "#2e2a39"
+    },
+    {
+      "type": "color",
+      "id": "compare_price_color",
+      "label": "Compare price color",
+      "default": "#999999"
+    },
+    {
+      "type": "header",
+      "content": "Badges and tags"
+    },
+    {
+      "type": "color",
+      "id": "badge_bg_color",
+      "label": "Discount badge background",
+      "default": "#dc2626"
+    },
+    {
+      "type": "color",
+      "id": "badge_text_color",
+      "label": "Discount badge text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "tag_bg_color",
+      "label": "Product tag background",
+      "default": "#10b981"
+    },
+    {
+      "type": "color",
+      "id": "tag_text_color",
+      "label": "Product tag text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Reviews"
+    },
+    {
+      "type": "color",
+      "id": "star_color",
+      "label": "Star color",
+      "default": "#fbbf24"
+    },
+    {
+      "type": "color",
+      "id": "star_empty_color",
+      "label": "Empty star color",
+      "default": "#e5e7eb"
+    },
+    {
+      "type": "color",
+      "id": "review_count_color",
+      "label": "Review count color",
+      "default": "#666666"
+    },
+    {
+      "type": "header",
+      "content": "Add to cart button"
+    },
+    {
+      "type": "color",
+      "id": "button_bg_color",
+      "label": "Button background",
+      "default": "#2e2a39"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_bg_color",
+      "label": "Button hover background",
+      "default": "#1f1a26"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_text_color",
+      "label": "Button hover text color",
+      "default": "#ffffff"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Bestseller products"
+    }
+  ]
+}
 {% endschema %}
