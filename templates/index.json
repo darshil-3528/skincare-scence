@@ -9,6 +9,39 @@
  */
 {
   "sections": {
+    "17596472642fdef62c": {
+      "type": "_blocks",
+      "blocks": {
+        "ai_gen_block_4ed8a0a_8JcYYK": {
+          "type": "ai_gen_block_4ed8a0a",
+          "settings": {
+            "section_title": "Bestsellers",
+            "section_subtitle": "Unmissable Favourites You'll Adore",
+            "see_all_text": "See All",
+            "see_all_collection": "",
+            "products_per_tab": 8,
+            "tab_1_title": "Trending Bestsellers",
+            "tab_1_collection": "t-shirt",
+            "tab_2_title": "Skin Care",
+            "tab_2_collection": "",
+            "tab_3_title": "Makeup",
+            "tab_3_collection": "sofa",
+            "tab_4_title": "Hair Care",
+            "tab_4_collection": "",
+            "show_discount_badge": true,
+            "show_rating": true,
+            "show_product_tags": true,
+            "add_to_cart_text": "Add to Cart",
+            "select_options_text": "Select Options"
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "ai_gen_block_4ed8a0a_8JcYYK"
+      ],
+      "settings": {}
+    },
     "1758641034f5e9f5f2": {
       "type": "_blocks",
       "blocks": {
@@ -156,6 +189,7 @@
     }
   },
   "order": [
+    "17596472642fdef62c",
     "1758641034f5e9f5f2",
     "image-with-text",
     "featured-collection"
