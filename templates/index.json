@@ -9,101 +9,6 @@
  */
 {
   "sections": {
-    "175964871888577265": {
-      "type": "_blocks",
-      "blocks": {
-        "ai_gen_block_9fcd303_dAWNcx": {
-          "type": "ai_gen_block_9fcd303",
-          "settings": {
-            "title": "Bestsellers",
-            "subtitle": "Unmissable Favourites You'll Adore",
-            "see_all_text": "See All",
-            "see_all_url": "",
-            "default_collection": "",
-            "products_to_show": 8,
-            "show_collection_tabs": true,
-            "tab_title_1": "All",
-            "collection_1": "t-shirt",
-            "tab_title_2": "Skincare",
-            "collection_2": "",
-            "tab_title_3": "Makeup",
-            "collection_3": "",
-            "tab_title_4": "Fragrance",
-            "collection_4": "",
-            "cart_action": "notification",
-            "background_color": "#fdfbf7",
-            "section_padding_top": 60,
-            "section_padding_bottom": 60,
-            "title_size": 36,
-            "title_color": "#2e2a39",
-            "subtitle_size": 16,
-            "subtitle_color": "#666666",
-            "see_all_bg_color": "#9b046f",
-            "see_all_text_color": "#ffffff",
-            "see_all_hover_bg_color": "#7a0356",
-            "see_all_hover_text_color": "#ffffff",
-            "tab_text_color": "#2e2a39",
-            "tab_border_color": "#e5e5e5",
-            "tab_active_bg_color": "#9b046f",
-            "tab_active_text_color": "#ffffff",
-            "card_bg_color": "#ffffff",
-            "product_title_color": "#2e2a39",
-            "product_description_color": "#666666",
-            "price_color": "#2e2a39",
-            "compare_price_color": "#999999",
-            "badge_bg_color": "#dc2626",
-            "badge_text_color": "#ffffff",
-            "tag_bg_color": "#10b981",
-            "tag_text_color": "#ffffff",
-            "star_color": "#fbbf24",
-            "star_empty_color": "#e5e7eb",
-            "review_count_color": "#666666",
-            "button_bg_color": "#2e2a39",
-            "button_text_color": "#ffffff",
-            "button_hover_bg_color": "#1f1a26",
-            "button_hover_text_color": "#ffffff"
-          },
-          "blocks": {}
-        }
-      },
-      "block_order": [
-        "ai_gen_block_9fcd303_dAWNcx"
-      ],
-      "settings": {}
-    },
-    "17596472642fdef62c": {
-      "type": "_blocks",
-      "blocks": {
-        "ai_gen_block_4ed8a0a_8JcYYK": {
-          "type": "ai_gen_block_4ed8a0a",
-          "settings": {
-            "section_title": "Bestsellers",
-            "section_subtitle": "Unmissable Favourites You'll Adore",
-            "see_all_text": "See All",
-            "see_all_collection": "",
-            "products_per_tab": 8,
-            "tab_1_title": "Trending Bestsellers",
-            "tab_1_collection": "t-shirt",
-            "tab_2_title": "Skin Care",
-            "tab_2_collection": "",
-            "tab_3_title": "Makeup",
-            "tab_3_collection": "sofa",
-            "tab_4_title": "Hair Care",
-            "tab_4_collection": "",
-            "show_discount_badge": true,
-            "show_rating": true,
-            "show_product_tags": true,
-            "add_to_cart_text": "Add to Cart",
-            "select_options_text": "Select Options"
-          },
-          "blocks": {}
-        }
-      },
-      "block_order": [
-        "ai_gen_block_4ed8a0a_8JcYYK"
-      ],
-      "settings": {}
-    },
     "1758641034f5e9f5f2": {
       "type": "_blocks",
       "blocks": {
@@ -251,8 +156,6 @@
     }
   },
   "order": [
-    "175964871888577265",
-    "17596472642fdef62c",
     "1758641034f5e9f5f2",
     "image-with-text",
     "featured-collection"
